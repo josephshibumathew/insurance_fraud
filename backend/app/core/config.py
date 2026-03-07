@@ -39,6 +39,8 @@ class Settings(BaseSettings):
 	groq_api_key: str | None = None
 	groq_model: str = "llama3-70b-8192"
 
+	ml_api_url: str | None = None  # HF Space inference URL, e.g. https://user-space.hf.space
+
 	rate_limit_per_minute: int = 120
 	request_id_header: str = "X-Request-ID"
 

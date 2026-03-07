@@ -25,6 +25,26 @@ from app.models.image import Image
 _rng = Random(7)
 
 
+def _call_damage_api(file_bytes: bytes, filename: str, settings) -> dict | None:
+    """Call HF Space damage API if ML_API_URL is configured."""
+    if not settings.ml_api_url:
+        return None
+    try:
+        import httpx
+        url = settings.ml_api_url.rstrip("/") + "/predict/damage"
+        response = httpx.post(
+            url,
+            files={"image": (filename, file_bytes, "image/jpeg")},
+            timeout=60.0,
+        )
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:
+        import logging
+        logging.getLogger("fraud-api").warning("Damage API call failed, using fallback: %s", exc)
+        return None
+
+
 class ImageService:
     def __init__(self, db: Any) -> None:
         self.db = db
@@ -39,16 +59,28 @@ class ImageService:
         content = await image_file.read()
         file_path.write_bytes(content)
 
-        image = Image(
-            claim_id=claim_id,
-            filename=str(file_path),
-            processed=True,
-            damage_results={
+        ml_result = _call_damage_api(content, image_file.filename or "image.jpg", self.settings)
+
+        if ml_result:
+            damage_results = {
+                "severity_score": ml_result.get("severity_score", 0.5),
+                "count_by_damage_type": {"damage": ml_result.get("detection_count", 1)},
+                "affected_parts": ml_result.get("affected_parts", ["body"]),
+                "bounding_boxes": ml_result.get("bounding_boxes", []),
+            }
+        else:
+            damage_results = {
                 "severity_score": round(_rng.uniform(0.1, 0.95), 3),
                 "count_by_damage_type": {"scratch": _rng.randint(0, 3), "dent": _rng.randint(0, 2)},
                 "affected_parts": ["bumper", "door"],
                 "bounding_boxes": [{"x": 30, "y": 45, "w": 80, "h": 60}],
-            },
+            }
+
+        image = Image(
+            claim_id=claim_id,
+            filename=str(file_path),
+            processed=True,
+            damage_results=damage_results,
             created_at=datetime.now(UTC),
         )
         self.db.add(image)

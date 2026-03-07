@@ -17,10 +17,41 @@ def _get_sqlalchemy_select():
 
 Session = Any
 
+from app.core.config import get_settings
 from app.models.claim import Claim
 from app.models.fraud_prediction import FraudPrediction
 
 _rng = Random(42)
+
+
+def _call_ml_api(claim: "Claim", settings) -> dict | None:
+    """Call HF Space fraud API if ML_API_URL is configured."""
+    if not settings.ml_api_url:
+        return None
+    try:
+        import httpx
+
+        payload = {
+            "month": claim.accident_date.strftime("%B") if claim.accident_date else "January",
+            "day_of_week": claim.accident_date.strftime("%A") if claim.accident_date else "Monday",
+            "make": claim.vehicle_make or "Other",
+            "age_of_vehicle": claim.vehicle_age or 5,
+            "age_of_policy_holder": claim.policy_holder_age or 35,
+            "policy_type": claim.policy_type or "Sedan - All Perils",
+            "police_report_filed": claim.police_report_filed or "No",
+            "witness_present": claim.witness_present or "No",
+            "claim_amount": float(claim.claim_amount or 0),
+            "number_of_claims": claim.number_of_claims or 1,
+            "deductible": float(claim.deductible or 400),
+        }
+        url = settings.ml_api_url.rstrip("/") + "/predict/fraud"
+        response = httpx.post(url, json=payload, timeout=30.0)
+        response.raise_for_status()
+        return response.json()
+    except Exception as exc:
+        import logging
+        logging.getLogger("fraud-api").warning("ML API call failed, using fallback: %s", exc)
+        return None
 
 
 class FraudService:
@@ -32,13 +63,21 @@ class FraudService:
         if claim is None:
             raise ValueError("Claim not found")
 
-        ensemble_score = min(1.0, max(0.0, (claim.claim_amount / 100000.0) + _rng.uniform(0.05, 0.35)))
-        fusion_score = min(1.0, max(0.0, ensemble_score + _rng.uniform(-0.05, 0.08)))
-        shap_values = {
-            "claim_amount": round(ensemble_score * 0.33, 4),
-            "accident_date_recency": round(_rng.uniform(-0.08, 0.18), 4),
-            "policy_pattern": round(_rng.uniform(-0.05, 0.12), 4),
-        }
+        settings = get_settings()
+        ml_result = _call_ml_api(claim, settings)
+
+        if ml_result:
+            ensemble_score = float(ml_result.get("ensemble_score", 0.5))
+            fusion_score = float(ml_result.get("fusion_score", ensemble_score))
+            shap_values = ml_result.get("shap_values", {})
+        else:
+            ensemble_score = min(1.0, max(0.0, (claim.claim_amount / 100000.0) + _rng.uniform(0.05, 0.35)))
+            fusion_score = min(1.0, max(0.0, ensemble_score + _rng.uniform(-0.05, 0.08)))
+            shap_values = {
+                "claim_amount": round(ensemble_score * 0.33, 4),
+                "accident_date_recency": round(_rng.uniform(-0.08, 0.18), 4),
+                "policy_pattern": round(_rng.uniform(-0.05, 0.12), 4),
+            }
 
         prediction = FraudPrediction(
             claim_id=claim_id,
