@@ -14,7 +14,7 @@ services:
       - key: GROQ_API_KEY
         sync: false   # Set this manually in Render dashboard
       - key: BACKEND_CORS_ORIGINS
-        sync: false   # Set to ["https://your-project.vercel.app"] after Vercel deploy
+        value: '["https://insurance-fraud.vercel.app"]'
       - key: ENVIRONMENT
         value: production
       - key: REQUIRE_HTTPS
