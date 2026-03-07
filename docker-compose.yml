@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fraud-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fraud_db
+      POSTGRES_USER: fraud_user
+      POSTGRES_PASSWORD: fraud_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud_user -d fraud_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: fraud-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://fraud_user:fraud_password@postgres:5432/fraud_db
+      ENSEMBLE_MODEL_PATH: /app/ml_models/models/ensemble/ensemble.pkl
+      YOLO_MODEL_PATH: /app/ml_models/models/yolo/best.pt
+      PREPROCESSOR_PATH: /app/ml_models/models/preprocessors/
+    volumes:
+      - ./ml_models:/app/ml_models
+      - ./backend/artifacts:/app/artifacts
+      - ./backend/uploads:/app/uploads
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fraud-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://localhost:8000/api/v1
+      HOST: 0.0.0.0
+      PORT: 3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

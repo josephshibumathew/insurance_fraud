@@ -1,0 +1,17 @@
+{
+  "weights_source": "yolo11n.pt",
+  "data_yaml": "/Users/joseph/Documents/Coding/Project Insurance/automobile-insurance-fraud-detection/ml_models/data/yolo_format/data.yaml",
+  "epochs": 5,
+  "batch": 16,
+  "lr0": 0.005,
+  "optimizer": "AdamW",
+  "augment": true,
+  "patience": 5,
+  "best_model_path": "/Users/joseph/Documents/Coding/Project Insurance/automobile-insurance-fraud-detection/ml_models/models/yolo/best.pt",
+  "train_metrics": {
+    "map50": 0.9672003501470399,
+    "map50_95": 0.9644638423341731,
+    "precision": 0.9055626238743277,
+    "recall": 0.9001969641946956
+  }
+}

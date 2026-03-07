@@ -1,0 +1,170 @@
+/* ── Google Fonts ─────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── CSS Custom Properties ────────────────────────────────────────────── */
+:root {
+  --navy-900:   #222831;
+  --navy-700:   #393E46;
+  --navy-600:   #6B6358;
+  --navy-500:   #948979;
+  --navy-100:   #DFD0B8;
+  --navy-50:    #F5F1EA;
+  --amber:      #FFB703;
+  --teal:       #06A77D;
+  --red:        #D64045;
+  --bg:         #F5F1EA;
+  --surface:    #ffffff;
+  --text-main:  #222831;
+  --text-muted: #948979;
+  --border:     rgba(34, 40, 49, 0.12);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────── */
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--text-main);
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(34, 40, 49, 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 100%, rgba(148, 137, 121, 0.05) 0%, transparent 40%);
+  }
+
+  h1, h2, h3, h4, h5 {
+    letter-spacing: -0.02em;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar        { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track  { background: var(--navy-50); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb  { background: var(--navy-100); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--navy-500); }
+
+  /* Selection highlight */
+  ::selection {
+    background-color: rgba(148, 137, 121, 0.25);
+    color: var(--navy-900);
+  }
+}
+
+/* ── Component Layer ──────────────────────────────────────────────────── */
+@layer components {
+
+  /* Glass surface */
+  .glass-panel {
+    @apply rounded-2xl border border-white/60 bg-white/80 shadow-soft backdrop-blur-md;
+  }
+
+  /* Standard card */
+  .app-card {
+    @apply rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card
+           transition-all duration-200 hover:-translate-y-0.5 hover:shadow-card-hover;
+  }
+
+  /* Form input */
+  .app-input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5
+           text-sm text-slate-800 shadow-sm outline-none transition
+           placeholder:text-slate-400;
+  }
+  .app-input:focus {
+    border-color: rgba(148, 137, 121, 0.80);
+    box-shadow: 0 0 0 3px rgba(148, 137, 121, 0.22);
+  }
+
+  /* Primary button — deep navy */
+  .app-button {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl
+           bg-navy-900 px-4 py-2 text-sm font-semibold text-white shadow-sm
+           transition-all hover:scale-[1.02] hover:bg-navy-700 hover:shadow-md
+           active:scale-[0.98]
+           disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  /* Secondary button */
+  .app-button-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl
+           border border-slate-200 bg-white px-4 py-2 text-sm font-semibold
+           text-slate-700 shadow-sm transition-all
+           hover:border-navy-500/50 hover:bg-navy-50/60 hover:text-navy-900
+           active:scale-[0.98]
+           disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  /* Danger button */
+  .app-button-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-xl
+           bg-red-600 px-4 py-2 text-sm font-semibold text-white shadow-sm
+           transition-all hover:scale-[1.02] hover:bg-red-700 hover:shadow-md
+           active:scale-[0.98]
+           disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  /* Icon button */
+  .app-icon-btn {
+    @apply inline-flex items-center justify-center rounded-lg border border-slate-200
+           bg-white p-2 text-slate-600 shadow-sm transition-all
+           hover:border-navy-500/40 hover:bg-navy-50 hover:text-navy-900;
+  }
+
+  /* Badge helpers */
+  .app-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+  .app-badge-green  { @apply app-badge bg-emerald-100 text-emerald-800; }
+  .app-badge-amber  { @apply app-badge bg-amber-100 text-amber-800; }
+  .app-badge-red    { @apply app-badge bg-red-100 text-red-700; }
+  .app-badge-navy   { @apply app-badge bg-navy-900/10 text-navy-900; }
+  .app-badge-slate  { @apply app-badge bg-slate-100 text-slate-700; }
+
+  /* Dropzone */
+  .dropzone {
+    @apply rounded-2xl border-2 border-dashed border-navy-900/20 bg-navy-50/40
+           p-8 text-center cursor-pointer
+           transition-colors hover:border-navy-500/50 hover:bg-navy-50/70;
+  }
+  .dropzone.active {
+    @apply border-navy-500 bg-navy-50;
+  }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% auto;
+    animation: shimmer 1.9s linear infinite;
+  }
+
+  /* Terminal / mono surface */
+  .terminal-surface {
+    @apply rounded-xl border border-slate-700 bg-slate-950 p-4 font-mono text-xs text-slate-100;
+  }
+
+  /* Form label */
+  .form-label-tw {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  /* Form error */
+  .form-error-tw {
+    @apply mt-1 text-xs text-red-600;
+  }
+
+  /* Page section heading */
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+}

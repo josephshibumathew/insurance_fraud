@@ -1,0 +1,68 @@
+name: Test Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install backend deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install pytest pytest-cov
+
+      - name: Run backend unit/integration/security/ml tests with coverage
+        env:
+          DATABASE_URL: sqlite:///./ci_test.db
+          JWT_SECRET_KEY: ci-secret
+          GROQ_API_KEY: ci-mock-key
+        run: |
+          pytest ../tests/unit ../tests/integration ../tests/security ../tests/ml --cov=app --cov-report=xml --cov-report=term
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.xml
+
+  frontend-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+      - name: Install frontend deps
+        run: npm install
+      - name: Run frontend tests
+        run: npm test -- --watchAll=false
+
+  performance-regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Benchmark regression gate
+        run: python tests/performance/benchmark_regression.py

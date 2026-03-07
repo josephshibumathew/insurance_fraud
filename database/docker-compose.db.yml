@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fraud-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fraud_db
+      POSTGRES_USER: fraud_user
+      POSTGRES_PASSWORD: fraud_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fraud_user -d fraud_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

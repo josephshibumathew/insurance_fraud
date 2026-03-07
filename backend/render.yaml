@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: fraud-detection-api
+    runtime: python
+    plan: free
+    autoDeploy: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # Set this manually in Render dashboard (your Supabase URL)
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false   # Set this manually in Render dashboard
+      - key: BACKEND_CORS_ORIGINS
+        sync: false   # Set to ["https://your-project.vercel.app"] after Vercel deploy
+      - key: ENVIRONMENT
+        value: production
+      - key: REQUIRE_HTTPS
+        value: "false"

@@ -1,0 +1,8 @@
+{
+  "Executive Summary": "Claim flagged for medium fraud risk based on tabular and image evidence.",
+  "Evidence Review": "Claim amount and mismatch signals contribute to elevated risk.",
+  "SHAP Insights": "Top contributors: claim_amount, policy_pattern, accident_recency.",
+  "Recommendation": "Manual review before payout.",
+  "Next Steps": "Request additional photos and verify policy history.",
+  "Disclaimer": "This report is AI-generated and should be reviewed by a qualified insurance professional"
+}

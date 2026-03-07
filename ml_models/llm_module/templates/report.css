@@ -1,0 +1,46 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 24px;
+  color: #1f2937;
+  line-height: 1.4;
+}
+
+.header {
+  border-bottom: 2px solid #d1d5db;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.brand {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.meta {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+h2 {
+  font-size: 16px;
+  margin-top: 18px;
+  margin-bottom: 8px;
+  border-left: 4px solid #9ca3af;
+  padding-left: 8px;
+}
+
+.narrative {
+  white-space: pre-wrap;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+footer {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #d1d5db;
+  font-size: 11px;
+  color: #6b7280;
+}

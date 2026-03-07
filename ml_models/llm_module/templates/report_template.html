@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fraud Assessment Report</title>
+  <link rel="stylesheet" href="./report.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="brand">Insurance Fraud Analytics</div>
+    <div class="meta">Generated: {{ generated_at }}</div>
+  </header>
+
+  <section>
+    <h2>Claim Summary</h2>
+    <p><strong>Claim ID:</strong> {{ claim_id }}</p>
+    <p><strong>Fraud Score:</strong> {{ fraud_score }}</p>
+    <p><strong>Risk Level:</strong> {{ risk_level }}</p>
+  </section>
+
+  <section>
+    <h2>Damage Assessment</h2>
+    <p>{{ damage_summary }}</p>
+  </section>
+
+  <section>
+    <h2>SHAP Insights</h2>
+    <ul>
+      {{ shap_items }}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Narrative</h2>
+    <div class="narrative">{{ narrative }}</div>
+  </section>
+
+  <section>
+    <h2>Recommendation and Next Steps</h2>
+    <div>{{ recommendations }}</div>
+  </section>
+
+  <footer>
+    This report is AI-generated and should be reviewed by a qualified insurance professional
+  </footer>
+</body>
+</html>

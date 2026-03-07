@@ -1,0 +1,5 @@
+{
+  "health_p95_ms": 120,
+  "dashboard_stats_p95_ms": 250,
+  "fraud_predict_p95_ms": 600
+}
