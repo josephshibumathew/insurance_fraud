@@ -1,6 +1,11 @@
 """Backend FastAPI application entrypoint."""
 
 from pathlib import Path
+import sys
+
+PROJECT_SRC_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_SRC_ROOT) not in sys.path:
+	sys.path.insert(0, str(PROJECT_SRC_ROOT))
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError

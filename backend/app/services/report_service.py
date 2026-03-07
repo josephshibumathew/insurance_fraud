@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -11,8 +12,47 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.models.claim import Claim
 from app.models.report import Report
-from ml_models.llm_module.pdf_generator import generate_pdf_report
-from ml_models.llm_module.report_generator import generate_report_text
+
+try:
+	from ml_models.llm_module.pdf_generator import generate_pdf_report
+	from ml_models.llm_module.report_generator import generate_report_text
+	ML_MODELS_AVAILABLE = True
+except Exception:
+	ML_MODELS_AVAILABLE = False
+
+	def generate_report_text(claim_data: dict[str, Any], score: float, damage_assessment: dict[str, Any], shap_explanations: dict[str, Any]) -> str:
+		top_features = shap_explanations.get("top_contributing_features", [])
+		feature_lines = "\n".join(
+			f"- {item.get('feature', 'unknown')}: {item.get('shap_value', 0)}"
+			for item in top_features
+		) or "- No feature importance data available"
+
+		return (
+			"Executive Summary:\n"
+			f"Claim {claim_data.get('claim_id')} has estimated fraud score {score:.3f}.\n\n"
+			"Damage Assessment:\n"
+			f"Severity score: {damage_assessment.get('severity_score', 0)}\n"
+			f"Affected parts: {', '.join(damage_assessment.get('affected_parts', [])) or 'N/A'}\n\n"
+			"SHAP Feature Importance:\n"
+			f"{feature_lines}\n\n"
+			"Recommendation:\n"
+			"Route this claim for manual review if score is medium/high."
+		)
+
+	def generate_pdf_report(
+		output_path: str | Path,
+		claim_data: dict[str, Any],
+		fraud_score: float,
+		damage_assessment: dict[str, Any],
+		shap_explanations: dict[str, Any],
+		narrative_text: str,
+		damage_image_paths: list[str] | None = None,
+		logo_path: str | None = None,
+	) -> Path:
+		path = Path(output_path)
+		path.parent.mkdir(parents=True, exist_ok=True)
+		path.write_text(narrative_text, encoding="utf-8")
+		return path
 
 
 LOGGER = logging.getLogger(__name__)
@@ -52,6 +92,9 @@ class ReportService:
 		)
 
 	def generate_for_claim(self, claim_id: int) -> Report:
+		if not ML_MODELS_AVAILABLE:
+			LOGGER.warning("ml_models package unavailable; using report fallback mode")
+
 		claim = self.db.get(Claim, claim_id)
 		if claim is None:
 			raise ValueError("Claim not found")
