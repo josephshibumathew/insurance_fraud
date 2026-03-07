@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 	backend_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"])
 
 	database_url: str = "sqlite:///./backend.db"
+	database_pool_url: str | None = None
 	db_pool_size: int = 10
 	db_max_overflow: int = 20
 

@@ -79,6 +79,9 @@ Thumbs.db
 # ── Docker volumes ──────────────────────────────────────────────────────
 postgres-data/
 
+# ── Local cloned external repos ─────────────────────────────────────────
+insurance-fraud-ml/
+
 # ── Alembic ─────────────────────────────────────────────────────────────
 # Keep versions/ tracked, exclude pycache inside it
 alembic/__pycache__/

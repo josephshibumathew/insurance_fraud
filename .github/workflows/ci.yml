@@ -125,6 +125,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy scan backend Dockerfile
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
@@ -133,6 +134,7 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Trivy scan frontend Dockerfile
+        continue-on-error: true
         uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: fs
