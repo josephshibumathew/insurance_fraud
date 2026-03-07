@@ -1,7 +1,12 @@
 import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || "";
-const API_V1_URL = `${API_BASE_URL}/api/v1`;
+function toApiV1Base(rawBase = "") {
+  const cleaned = String(rawBase || "").trim().replace(/\/+$/, "");
+  if (!cleaned) return "";
+  return cleaned.endsWith("/api/v1") ? cleaned : `${cleaned}/api/v1`;
+}
+
+const API_V1_URL = toApiV1Base(process.env.REACT_APP_API_URL);
 
 const api = axios.create({
   baseURL: API_V1_URL,
@@ -121,7 +126,7 @@ api.interceptors.response.use(
 
 export const authApi = {
   register: (payload) => api.post("/auth/register", payload),
-  login: (payload) => axios.post(`${process.env.REACT_APP_API_URL}/api/v1/auth/login`, payload),
+  login: (payload) => axios.post(`${API_V1_URL}/auth/login`, payload),
   refresh: (payload) => api.post("/auth/refresh", payload),
   logout: (refreshToken) => api.post("/auth/logout", null, { headers: refreshToken ? { "X-Refresh-Token": refreshToken } : {} }),
   me: () => api.get("/auth/me"),

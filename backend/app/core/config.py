@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 	app_name: str = "Automobile Insurance Fraud Detection API"
 	app_description: str = "Comprehensive backend for claims, fraud scoring, damage analysis, and AI reports."
 	app_version: str = "1.0.0"
-	environment: Literal["development", "staging", "production"] = "development"
+	environment: Literal["development", "staging", "production", "test"] = "development"
 
 	backend_cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000", "http://127.0.0.1:3000"])
 

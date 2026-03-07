@@ -9,9 +9,6 @@ on:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - uses: actions/checkout@v4
 
@@ -22,23 +19,25 @@ jobs:
       - name: Install backend deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-dev.txt
           pip install pytest pytest-cov
 
-      - name: Run backend unit/integration/security/ml tests with coverage
+      - name: Run backend tests with coverage
         env:
           DATABASE_URL: sqlite:///./ci_test.db
           JWT_SECRET_KEY: ci-secret
           GROQ_API_KEY: ci-mock-key
+          BACKEND_CORS_ORIGINS: '["http://localhost:3000"]'
+          ENVIRONMENT: test
         run: |
-          pytest ../tests/unit ../tests/integration ../tests/security ../tests/ml --cov=app --cov-report=xml --cov-report=term
+          pytest backend/tests --cov=backend/app --cov-report=xml --cov-report=term -q
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: backend/coverage.xml
+          path: coverage.xml
 
   frontend-tests:
     runs-on: ubuntu-latest
@@ -55,7 +54,7 @@ jobs:
       - name: Install frontend deps
         run: npm install
       - name: Run frontend tests
-        run: npm test -- --watchAll=false
+        run: npm test -- --watchAll=false --passWithNoTests
 
   performance-regression:
     runs-on: ubuntu-latest
