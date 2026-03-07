@@ -117,7 +117,7 @@ jobs:
           context: ./frontend
           file: ./frontend/Dockerfile.prod
           build-args: |
-            REACT_APP_API_URL=http://localhost:8000/api/v1
+            REACT_APP_API_URL=https://insurance-fraud-cdxv.onrender.com
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: ${{ steps.meta_frontend.outputs.tags }}
           labels: ${{ steps.meta_frontend.outputs.labels }}

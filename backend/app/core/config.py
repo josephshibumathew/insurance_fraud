@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,8 +52,18 @@ class Settings(BaseSettings):
 	activity_log_file: str = "activity.log"
 	system_log_file: str = "system.log"
 
+	@model_validator(mode="after")
+	def validate_database_url_for_environment(self) -> "Settings":
+		if self.environment == "production":
+			db_url = (self.database_url or "").lower()
+			if "localhost" in db_url or "127.0.0.1" in db_url:
+				raise ValueError("DATABASE_URL must not point to localhost in production")
+		return self
+
 
 @lru_cache
 def get_settings() -> Settings:
-	return Settings()
+	environment = os.getenv("ENVIRONMENT", "development").lower()
+	env_file = ".env" if environment in {"development", "test"} else None
+	return Settings(_env_file=env_file)
 
