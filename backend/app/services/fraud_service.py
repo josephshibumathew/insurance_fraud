@@ -34,15 +34,15 @@ def _call_ml_api(claim: "Claim", settings) -> dict | None:
         payload = {
             "month": claim.accident_date.strftime("%B") if claim.accident_date else "January",
             "day_of_week": claim.accident_date.strftime("%A") if claim.accident_date else "Monday",
-            "make": claim.vehicle_make or "Other",
-            "age_of_vehicle": claim.vehicle_age or 5,
-            "age_of_policy_holder": claim.policy_holder_age or 35,
-            "policy_type": claim.policy_type or "Sedan - All Perils",
-            "police_report_filed": claim.police_report_filed or "No",
-            "witness_present": claim.witness_present or "No",
+            "make": "Other",
+            "age_of_vehicle": 5,
+            "age_of_policy_holder": 35,
+            "policy_type": "Sedan - All Perils",
+            "police_report_filed": "No",
+            "witness_present": "No",
             "claim_amount": float(claim.claim_amount or 0),
-            "number_of_claims": claim.number_of_claims or 1,
-            "deductible": float(claim.deductible or 400),
+            "number_of_claims": 1,
+            "deductible": 400.0,
         }
         url = settings.ml_api_url.rstrip("/") + "/predict/fraud"
         response = httpx.post(url, json=payload, timeout=30.0)
