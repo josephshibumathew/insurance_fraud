@@ -49,10 +49,10 @@ YOLO_PATH = MODELS_DIR / "yolo" / "best.pt"
 METADATA_PATH = MODELS_DIR / "preprocessing_metadata.json"
 
 # ── Lazy globals ───────────────────────────────────────────────────────
-_ensemble = None
-_preprocessor = None
-_xgb_model = None
-_yolo_wrapper = None
+_ensemble: Any | None = None
+_preprocessor: Any | None = None
+_xgb_model: Any | None = None
+_yolo_wrapper: Any | None = None
 _feature_names: list[str] = []
 
 
@@ -76,7 +76,7 @@ def _load_models() -> None:
         logger.info("Loading YOLO model…")
         try:
             from ml_models.yolo_module.yolo_model import YOLOModelWrapper, YOLOConfig
-            _yolo_wrapper = YOLOModelWrapper(model_path=str(YOLO_PATH), config=YOLOConfig())
+            _yolo_wrapper = YOLOModelWrapper(weights_path=str(YOLO_PATH), config=YOLOConfig())
         except Exception as exc:
             logger.warning("YOLO model failed to load (damage endpoint unavailable): %s", exc)
     else:
@@ -190,9 +190,13 @@ def build_input_df(claim: ClaimInput) -> pd.DataFrame:
 
 # ── SHAP helper ────────────────────────────────────────────────────────
 def compute_shap(x_processed: np.ndarray) -> dict[str, float]:
+    if _xgb_model is None:
+        return {}
+
     try:
         import shap
-        explainer = shap.TreeExplainer(_xgb_model.model)  # XGBClassifier
+        xgb_estimator = getattr(_xgb_model, "model", _xgb_model)
+        explainer = shap.TreeExplainer(xgb_estimator)
         shap_vals = explainer.shap_values(x_processed)
         if shap_vals.ndim == 2:
             values = shap_vals[0].tolist()

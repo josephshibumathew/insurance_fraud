@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "";
+const API_V1_URL = `${API_BASE_URL}/api/v1`;
+
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api/v1",
+  baseURL: API_V1_URL,
   timeout: 15000,
 });
 
@@ -118,7 +121,7 @@ api.interceptors.response.use(
 
 export const authApi = {
   register: (payload) => api.post("/auth/register", payload),
-  login: (payload) => api.post("/auth/login", payload),
+  login: (payload) => axios.post(`${process.env.REACT_APP_API_URL}/api/v1/auth/login`, payload),
   refresh: (payload) => api.post("/auth/refresh", payload),
   logout: (refreshToken) => api.post("/auth/logout", null, { headers: refreshToken ? { "X-Refresh-Token": refreshToken } : {} }),
   me: () => api.get("/auth/me"),
