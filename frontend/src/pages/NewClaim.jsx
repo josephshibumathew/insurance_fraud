@@ -29,6 +29,13 @@ const schema = z.object({
 
 const STEP_LABELS = ["Claim Profile", "Images", "Review"];
 
+function formatDateYYYYMMDD(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function parseCsvLine(line = "") {
   const values = [];
   let current = "";
@@ -79,6 +86,8 @@ function NewClaim() {
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
+
+  const todayString = formatDateYYYYMMDD();
 
   const {
     register,
@@ -134,6 +143,12 @@ function NewClaim() {
   const previousStep = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const onSubmit = async (payload) => {
+    const todayAtSubmit = formatDateYYYYMMDD();
+    if (payload.accident_date && payload.accident_date > todayAtSubmit) {
+      setError("Accident date cannot be in the future");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -296,7 +311,7 @@ function NewClaim() {
               {/* Accident Date */}
               <div>
                 <label className="form-label-tw">Accident Date</label>
-                <input type="date" className="app-input" {...register("accident_date")} />
+                <input type="date" className="app-input" max={todayString} {...register("accident_date")} />
               </div>
 
               {/* Accident Location */}
