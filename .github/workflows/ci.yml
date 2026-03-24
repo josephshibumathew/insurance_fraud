@@ -130,14 +130,14 @@ jobs:
         with:
           scan-type: fs
           scan-ref: ./backend
-          exit-code: '0'
+          exit-code: "0"
           severity: HIGH,CRITICAL
 
       - name: Trivy scan frontend Dockerfile
         continue-on-error: true
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.24.0
         with:
           scan-type: fs
           scan-ref: ./frontend
-          exit-code: '0'
+          exit-code: "0"
           severity: HIGH,CRITICAL

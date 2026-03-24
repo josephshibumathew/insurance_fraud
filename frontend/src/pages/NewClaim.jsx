@@ -292,6 +292,7 @@ function NewClaim() {
             </div>
           ) : null}
         </div>
+        
 
         <motion.div
           key={step}
