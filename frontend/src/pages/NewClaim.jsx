@@ -14,13 +14,16 @@ import { saveClaimExtendedFields } from "../utils/claimFieldStore";
 const schema = z.object({
   policy_number: z.string().min(3, "Policy number is required"),
   policy_type: z.enum(["Comprehensive", "Third Party", "Collision", "Liability"]),
-  claim_amount: z.coerce.number().positive("Claim amount must be positive"),
+  claim_amount: z.coerce
+    .number()
+    .min(500, "Claim amount must be at least 500")
+    .max(1000000, "Claim amount must be at most 1,000,000"),
   accident_date: z.string().min(1, "Accident date is required"),
   accident_location: z.string().min(2, "Accident location is required"),
   vehicle_age: z.coerce.number().min(0).max(40),
   vehicle_make: z.string().min(2),
   vehicle_model: z.string().min(1),
-  driver_age: z.coerce.number().min(18).max(100),
+  driver_age: z.coerce.number().min(18).max(80),
   driver_experience_years: z.coerce.number().min(0).max(80),
   previous_claims: z.coerce.number().min(0).max(20),
   witness: z.enum(["Yes", "No"]),
@@ -34,6 +37,68 @@ function formatDateYYYYMMDD(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function classifyFraudRisk(fraudScore) {
+  if (fraudScore > 70) return "HIGH FRAUD 🔴";
+  if (fraudScore > 30) return "SUSPICIOUS 🟡";
+  return "SAFE 🟢";
+}
+
+function validateBusinessRules(payload) {
+  const errors = [];
+  const factors = [];
+  let fraudScore = 0;
+
+  const todayString = formatDateYYYYMMDD();
+
+  const claimAmount = Number(payload.claim_amount);
+  const vehicleAge = Number(payload.vehicle_age);
+  const driverAge = Number(payload.driver_age);
+  const driverExperienceYears = Number(payload.driver_experience_years);
+  const previousClaims = Number(payload.previous_claims);
+
+  if (payload.accident_date && payload.accident_date > todayString) {
+    errors.push("Accident date cannot be in the future");
+    factors.push("+50: Accident date is in the future");
+    fraudScore += 50;
+  }
+
+  if (Number.isFinite(vehicleAge) && vehicleAge > 30) {
+    errors.push("Vehicle age exceeds realistic limit");
+    factors.push("+20: Vehicle age > 30");
+    fraudScore += 20;
+  }
+
+  if (
+    Number.isFinite(driverExperienceYears) &&
+    Number.isFinite(driverAge) &&
+    driverExperienceYears > driverAge - 18
+  ) {
+    errors.push("Driver experience is invalid");
+    factors.push("+20: Driver experience exceeds allowed maximum");
+    fraudScore += 20;
+  }
+
+  if (Number.isFinite(claimAmount) && claimAmount > 500000) {
+    factors.push("+20: Claim amount > 500,000");
+    fraudScore += 20;
+  }
+
+  if (Number.isFinite(previousClaims) && previousClaims > 5) {
+    errors.push("Too many previous claims (fraud risk)");
+    factors.push("+30: Previous claims > 5");
+    fraudScore += 30;
+  }
+
+  if (payload.police_report === "No" && Number.isFinite(claimAmount) && claimAmount > 50000) {
+    errors.push("High claim without police report");
+    factors.push("+25: Claim > 50,000 with no police report");
+    fraudScore += 25;
+  }
+
+  const riskLevel = classifyFraudRisk(fraudScore);
+  return { errors, fraudScore, riskLevel, factors };
 }
 
 function parseCsvLine(line = "") {
@@ -84,6 +149,7 @@ function NewClaim() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [fraudResult, setFraudResult] = useState(null);
   const [files, setFiles] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
 
@@ -143,14 +209,16 @@ function NewClaim() {
   const previousStep = () => setStep((prev) => Math.max(prev - 1, 0));
 
   const onSubmit = async (payload) => {
-    const todayAtSubmit = formatDateYYYYMMDD();
-    if (payload.accident_date && payload.accident_date > todayAtSubmit) {
-      setError("Accident date cannot be in the future");
+    setError("");
+    const businessRulesResult = validateBusinessRules(payload);
+    setFraudResult(businessRulesResult);
+
+    if (businessRulesResult.errors.length > 0) {
+      setError(businessRulesResult.errors.join(" | "));
       return;
     }
 
     setSubmitting(true);
-    setError("");
 
     try {
       const formData = new FormData();
@@ -211,6 +279,20 @@ function NewClaim() {
       {error && <ErrorAlert message={error} onClose={() => setError("")} />}
 
       <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-slate-700">Fraud Score: <span className="text-slate-900">{fraudResult?.fraudScore ?? 0}</span></p>
+            <p className="text-sm font-semibold text-slate-700">Risk Level: <span className="text-slate-900">{fraudResult?.riskLevel ?? "SAFE 🟢"}</span></p>
+          </div>
+
+          {fraudResult?.factors?.length ? (
+            <div className="mt-2">
+              <p className="text-xs font-semibold text-slate-500">Score factors</p>
+              <p className="mt-1 text-xs text-slate-600">{fraudResult.factors.join(" • ")}</p>
+            </div>
+          ) : null}
+        </div>
+
         <motion.div
           key={step}
           className="app-card"
